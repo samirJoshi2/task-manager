@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Update Task - Task Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h2>Update Task</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+        <form method="POST" action="{{ url_for('update_task', task_id=task.id) }}">
+            <div class="form-group">
+                <label for="title">Task Title</label>
+                <input type="text" class="form-control" id="title" name="title" value="{{ task.title }}" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea class="form-control" id="description" name="description"
+                    rows="3">{{ task.description }}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="category">Category</label>
+                <select class="form-control" id="category" name="category">
+                    <option value="Work" {% if task.category=='Work' %}selected{% endif %}>Work</option>
+                    <option value="Personal" {% if task.category=='Personal' %}selected{% endif %}>Personal</option>
+                    <option value="Study" {% if task.category=='Study' %}selected{% endif %}>Study</option>
+                    <option value="Urgent" {% if task.category=='Urgent' %}selected{% endif %}>Urgent</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="priority">Priority</label>
+                <select class="form-control" id="priority" name="priority">
+                    <option value="Low" {% if task.priority=='Low' %}selected{% endif %}>Low</option>
+                    <option value="Medium" {% if task.priority=='Medium' %}selected{% endif %}>Medium</option>
+                    <option value="High" {% if task.priority=='High' %}selected{% endif %}>High</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="deadline">Deadline (optional)</label>
+                <input type="datetime-local" class="form-control" id="deadline" name="deadline"
+                    value="{{ task.deadline.strftime('%Y-%m-%dT%H:%M') if task.deadline }}">
+            </div>
+            <button type="submit" class="btn btn-primary">Update Task</button>
+            <a href="{{ url_for('home') }}" class="btn btn-secondary ml-2">Back to Dashboard</a>
+        </form>
+    </div>
+</body>
+
+</html>

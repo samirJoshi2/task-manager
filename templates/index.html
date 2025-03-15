@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Task Manager Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <!-- Gradient Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home') }}">Task Manager</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon" style="color: #fff;"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ml-auto">
+                    <!-- Create Task Link -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('create_task') }}">Create New Task</a>
+                    </li>
+                    <!-- Logout Link -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- End Navbar -->
+
+    <div class="container mt-4">
+        <h2>Task Manager Dashboard</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} mt-2">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <!-- Row with Search Bar and Top Action Buttons -->
+        <div class="row mb-3">
+            <!-- Search Bar -->
+            <div class="col-md-6">
+                <form method="GET" action="{{ url_for('home') }}">
+                    <div class="input-group">
+                        <input type="text" name="search" value="{{ search_query|default('') }}" class="form-control"
+                            placeholder="Search tasks by title...">
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <!-- Bulk Action Buttons -->
+            <div class="col-md-6 text-right">
+                <button class="btn btn-info" id="startTaskBtn">Start</button>
+                <button class="btn btn-warning" id="endTaskBtn">End</button>
+                <button class="btn btn-success" id="completeTaskBtn">Complete</button>
+                <button class="btn btn-secondary" id="updateTaskBtn">Update</button>
+                <button class="btn btn-danger" id="deleteTaskBtn">Delete</button>
+            </div>
+        </div>
+
+        <!-- Table of Tasks with Checkboxes -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll"></th>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Category</th>
+                        <th>Priority</th>
+                        <th>Deadline</th>
+                        <th>Status</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for task in tasks %}
+                    <tr>
+                        <td><input type="checkbox" class="task-checkbox" value="{{ task.id }}"></td>
+                        <td>{{ task.id }}</td>
+                        <td>{{ task.title }}</td>
+                        <td>{{ task.category }}</td>
+                        <td>{{ task.priority }}</td>
+                        <td>{{ task.deadline if task.deadline else 'N/A' }}</td>
+                        <td>
+                            {% if task.completed %}
+                            <span class="badge badge-success">Completed</span>
+                            {% else %}
+                            <span class="badge badge-warning">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.start_time %}
+                            {{ task.start_time }}
+                            {% else %}
+                            <span class="text-muted">Not Started</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if task.end_time %}
+                            {{ task.end_time }}
+                            {% else %}
+                            <span class="text-muted">Not Ended</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Link to Work Summary (Chart) only -->
+        <div class="mt-4">
+            <a href="{{ url_for('chart_page') }}" class="btn btn-primary">
+                View Work Summary (Chart)
+            </a>
+            <!-- The "View Weekly Report" button is removed here -->
+        </div>
+    </div>
+
+    <!-- JS Dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // "Select All" functionality
+        document.getElementById('selectAll').addEventListener('change', function () {
+            const checkboxes = document.querySelectorAll('.task-checkbox');
+            checkboxes.forEach(cb => { cb.checked = this.checked; });
+        });
+
+        // Helper to get all selected task IDs
+        function getSelectedTaskIds() {
+            return Array.from(document.querySelectorAll('.task-checkbox:checked'))
+                .map(cb => cb.value);
+        }
+
+        function ensureSelection(selectedIds) {
+            if (!selectedIds.length) {
+                alert("No tasks selected.");
+                return false;
+            }
+            return true;
+        }
+
+        // Start
+        document.getElementById('startTaskBtn').addEventListener('click', function () {
+            const selectedIds = getSelectedTaskIds();
+            if (!ensureSelection(selectedIds)) return;
+            selectedIds.forEach(id => {
+                window.location.href = `/task/${id}/start`;
+            });
+        });
+
+        // End
+        document.getElementById('endTaskBtn').addEventListener('click', function () {
+            const selectedIds = getSelectedTaskIds();
+            if (!ensureSelection(selectedIds)) return;
+            selectedIds.forEach(id => {
+                window.location.href = `/task/${id}/end`;
+            });
+        });
+
+        // Complete
+        document.getElementById('completeTaskBtn').addEventListener('click', function () {
+            const selectedIds = getSelectedTaskIds();
+            if (!ensureSelection(selectedIds)) return;
+            selectedIds.forEach(id => {
+                window.location.href = `/task/${id}/complete`;
+            });
+        });
+
+        // Update
+        document.getElementById('updateTaskBtn').addEventListener('click', function () {
+            const selectedIds = getSelectedTaskIds();
+            if (!ensureSelection(selectedIds)) return;
+            // If multiple tasks selected, handle only the first
+            window.location.href = `/task/${selectedIds[0]}/update`;
+        });
+
+        // Delete
+        document.getElementById('deleteTaskBtn').addEventListener('click', function () {
+            const selectedIds = getSelectedTaskIds();
+            if (!ensureSelection(selectedIds)) return;
+            if (!confirm("Are you sure you want to delete the selected tasks?")) return;
+            selectedIds.forEach(id => {
+                window.location.href = `/task/${id}/delete`;
+            });
+        });
+    </script>
+</body>
+
+</html>
